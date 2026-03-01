@@ -1,0 +1,8 @@
+# iOS
+app_identifier("com.healthplatform.mobilePatient")
+apple_id(ENV["APPLE_ID"])
+itc_team_id(ENV["APP_STORE_CONNECT_TEAM_ID"])
+team_id(ENV["APPLE_DEVELOPER_TEAM_ID"])
+
+# Android
+package_name("com.healthplatform.mobile_patient")

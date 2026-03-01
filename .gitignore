@@ -1,0 +1,56 @@
+# ─── Fastlane CI/CD — fichiers sensibles générés en CI (ne jamais commiter) ───
+android/key.properties
+android/release.keystore
+ios/ExportOptions.plist
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# ─── Flutter / Dart ───────────────────────────────────────────────────────────
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+/coverage/
+**/doc/api/
+
+# ─── iOS ─────────────────────────────────────────────────────────────────────
+**/ios/Flutter/.last_build_id
+ios/Pods/
+ios/.symlinks/
+
+# ─── Android ─────────────────────────────────────────────────────────────────
+android/local.properties
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# ─── Symbolication / Obfuscation ─────────────────────────────────────────────
+app.*.symbols
+app.*.map.json
+
+# ─── Éditeurs ────────────────────────────────────────────────────────────────
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# ─── OS ──────────────────────────────────────────────────────────────────────
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+Thumbs.db

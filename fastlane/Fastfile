@@ -1,0 +1,168 @@
+# frozen_string_literal: true
+
+# Répertoire racine du projet Flutter (parent du dossier fastlane/)
+FLUTTER_ROOT = File.expand_path("..", __dir__)
+
+APP_BUNDLE_ID    = "com.healthplatform.mobilePatient"
+APP_BUNDLE_ID_AN = "com.healthplatform.mobile_patient"
+
+before_all do
+  Dir.chdir(FLUTTER_ROOT) { sh("flutter pub get") }
+end
+
+# ─── Android ─────────────────────────────────────────────────────────────────
+
+platform :android do
+  desc "Analyse statique + tests Flutter"
+  lane :test do
+    Dir.chdir(FLUTTER_ROOT) do
+      sh("flutter analyze --no-fatal-infos")
+      sh("flutter test")
+    end
+  end
+
+  desc "Build AAB + déploiement Firebase App Distribution (test interne)"
+  lane :beta do
+    setup_signing_android
+    build_number = ENV.fetch("BUILD_NUMBER", Time.now.strftime("%Y%m%d%H%M"))
+    Dir.chdir(FLUTTER_ROOT) do
+      sh("flutter build appbundle --release --build-number=#{build_number}")
+    end
+    firebase_app_distribution(
+      app:                    ENV.fetch("FIREBASE_PATIENT_APP_ID"),
+      groups:                 "internal-testers",
+      android_artifact_type:  "AAB",
+      android_artifact_path:  "#{FLUTTER_ROOT}/build/app/outputs/bundle/release/app-release.aab",
+      release_notes:          "Build #{build_number} — #{last_git_commit[:message]}"
+    )
+  end
+
+  desc "Build AAB + déploiement Google Play (production)"
+  lane :release do
+    setup_signing_android
+    build_number = ENV.fetch("BUILD_NUMBER", Time.now.strftime("%Y%m%d%H%M"))
+    Dir.chdir(FLUTTER_ROOT) do
+      sh("flutter build appbundle --release --build-number=#{build_number}")
+    end
+    upload_to_play_store(
+      track:                  "production",
+      aab:                    "#{FLUTTER_ROOT}/build/app/outputs/bundle/release/app-release.aab",
+      json_key_data:          ENV.fetch("GOOGLE_PLAY_JSON_KEY"),
+      skip_upload_screenshots: true,
+      skip_upload_images:      true,
+      skip_upload_metadata:    true,
+      release_status:          "draft"  # passe à "completed" après validation manuelle
+    )
+  end
+
+  # Prépare le keystore et key.properties depuis les variables d'environnement CI
+  private_lane :setup_signing_android do
+    keystore_path = File.join(FLUTTER_ROOT, "android", "release.keystore")
+    unless File.exist?(keystore_path)
+      keystore_b64 = ENV["ANDROID_KEYSTORE_BASE64"]
+      UI.user_error!("ANDROID_KEYSTORE_BASE64 non définie") unless keystore_b64
+      require "base64"
+      File.binwrite(keystore_path, Base64.strict_decode64(keystore_b64))
+    end
+    File.write(
+      File.join(FLUTTER_ROOT, "android", "key.properties"),
+      [
+        "storePassword=#{ENV.fetch('ANDROID_STORE_PASSWORD')}",
+        "keyPassword=#{ENV.fetch('ANDROID_KEY_PASSWORD')}",
+        "keyAlias=#{ENV.fetch('ANDROID_KEY_ALIAS', 'release')}",
+        "storeFile=../release.keystore"
+      ].join("\n")
+    )
+  end
+end
+
+# ─── iOS ─────────────────────────────────────────────────────────────────────
+
+platform :ios do
+  desc "Analyse statique + tests Flutter"
+  lane :test do
+    Dir.chdir(FLUTTER_ROOT) do
+      sh("flutter analyze --no-fatal-infos")
+      sh("flutter test")
+    end
+  end
+
+  desc "Build IPA + déploiement TestFlight (beta)"
+  lane :beta do
+    setup_asc_api_key
+    match(type: "appstore", readonly: true)
+    build_number = ENV.fetch("BUILD_NUMBER", Time.now.strftime("%Y%m%d%H%M"))
+    export_plist  = generate_export_options(build_number)
+    Dir.chdir(FLUTTER_ROOT) do
+      sh("flutter build ipa --release --build-number=#{build_number} --export-options-plist=#{export_plist}")
+    end
+    upload_to_testflight(
+      ipa:                              Dir["#{FLUTTER_ROOT}/build/ios/ipa/*.ipa"].first,
+      skip_waiting_for_build_processing: true,
+      changelog:                        "Build #{build_number} — #{last_git_commit[:message]}"
+    )
+  end
+
+  desc "Build IPA + soumission App Store"
+  lane :release do
+    setup_asc_api_key
+    match(type: "appstore", readonly: true)
+    build_number = ENV.fetch("BUILD_NUMBER", Time.now.strftime("%Y%m%d%H%M"))
+    export_plist  = generate_export_options(build_number)
+    Dir.chdir(FLUTTER_ROOT) do
+      sh("flutter build ipa --release --build-number=#{build_number} --export-options-plist=#{export_plist}")
+    end
+    deliver(
+      ipa:                Dir["#{FLUTTER_ROOT}/build/ios/ipa/*.ipa"].first,
+      submit_for_review:  true,
+      automatic_release:  false,
+      force:              true,
+      skip_screenshots:   true,
+      skip_metadata:      true
+    )
+  end
+
+  # Configure l'API Key App Store Connect (évite le mot de passe Apple 2FA)
+  private_lane :setup_asc_api_key do
+    app_store_connect_api_key(
+      key_id:              ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+      issuer_id:           ENV.fetch("APP_STORE_CONNECT_API_KEY_ISSUER_ID"),
+      key_content:         ENV.fetch("APP_STORE_CONNECT_API_KEY_CONTENT"),
+      is_key_content_base64: true,
+      in_house:            false
+    )
+  end
+
+  # Génère le fichier ExportOptions.plist dynamiquement (teamID depuis env)
+  private_lane :generate_export_options do |options|
+    plist_path = File.join(FLUTTER_ROOT, "ios", "ExportOptions.plist")
+    File.write(plist_path, <<~PLIST)
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+          <key>method</key>
+          <string>app-store</string>
+          <key>teamID</key>
+          <string>#{ENV.fetch('APPLE_DEVELOPER_TEAM_ID')}</string>
+          <key>signingStyle</key>
+          <string>manual</string>
+          <key>signingCertificate</key>
+          <string>Apple Distribution</string>
+          <key>provisioningProfiles</key>
+          <dict>
+              <key>#{APP_BUNDLE_ID}</key>
+              <string>match AppStore #{APP_BUNDLE_ID}</string>
+          </dict>
+          <key>uploadBitcode</key>
+          <false/>
+          <key>compileBitcode</key>
+          <false/>
+          <key>uploadSymbols</key>
+          <true/>
+      </dict>
+      </plist>
+    PLIST
+    plist_path
+  end
+end

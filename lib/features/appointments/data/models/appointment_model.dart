@@ -1,0 +1,132 @@
+class AppointmentModel {
+  final String id;
+  final String slotId;
+  final String patientId;
+  final String? kindId;
+  final String? notes;
+  final String status;
+  final String type;
+  final DateTime createdAt;
+  final AppointmentSlot? slot;
+  final AppointmentPatient? patient;
+  final AppointmentKind? kind;
+
+  AppointmentModel({
+    required this.id,
+    required this.slotId,
+    required this.patientId,
+    this.kindId,
+    this.notes,
+    required this.status,
+    required this.type,
+    required this.createdAt,
+    this.slot,
+    this.patient,
+    this.kind,
+  });
+
+  factory AppointmentModel.fromJson(Map<String, dynamic> json) {
+    return AppointmentModel(
+      id: json['id']?.toString() ?? '',
+      slotId: json['slotId']?.toString() ?? '',
+      patientId: json['patientId']?.toString() ?? '',
+      kindId: json['kindId']?.toString(),
+      notes: json['notes']?.toString(),
+      status: json['status']?.toString() ?? 'PENDING',
+      type: json['type']?.toString() ?? 'CONSULTATION',
+      createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      slot: json['slot'] is Map
+          ? AppointmentSlot.fromJson(json['slot'] as Map<String, dynamic>)
+          : null,
+      patient: json['patient'] is Map
+          ? AppointmentPatient.fromJson(json['patient'] as Map<String, dynamic>)
+          : null,
+      kind: json['kind'] is Map
+          ? AppointmentKind.fromJson(json['kind'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+
+  bool get isUpcoming =>
+      slot != null && slot!.start.isAfter(DateTime.now()) && status != 'CANCELLED';
+
+  String get statusLabel {
+    switch (status) {
+      case 'PENDING':
+        return 'En attente';
+      case 'CONFIRMED':
+        return 'Confirmé';
+      case 'CANCELLED':
+        return 'Annulé';
+      case 'COMPLETED':
+        return 'Terminé';
+      case 'NO_SHOW':
+        return 'Absent';
+      default:
+        return status;
+    }
+  }
+}
+
+class AppointmentSlot {
+  final String id;
+  final String ownerId;
+  final DateTime start;
+  final DateTime end;
+
+  AppointmentSlot({
+    required this.id,
+    required this.ownerId,
+    required this.start,
+    required this.end,
+  });
+
+  factory AppointmentSlot.fromJson(Map<String, dynamic> json) {
+    return AppointmentSlot(
+      id: json['id']?.toString() ?? '',
+      ownerId: json['ownerId']?.toString() ?? '',
+      start: DateTime.tryParse(json['start']?.toString() ?? '') ?? DateTime.now(),
+      end: DateTime.tryParse(json['end']?.toString() ?? '') ?? DateTime.now(),
+    );
+  }
+}
+
+class AppointmentPatient {
+  final String id;
+  final String? fullName;
+  final String email;
+
+  AppointmentPatient({
+    required this.id,
+    this.fullName,
+    required this.email,
+  });
+
+  factory AppointmentPatient.fromJson(Map<String, dynamic> json) {
+    return AppointmentPatient(
+      id: json['id']?.toString() ?? '',
+      fullName: json['fullName']?.toString(),
+      email: json['email']?.toString() ?? '',
+    );
+  }
+}
+
+class AppointmentKind {
+  final String id;
+  final String name;
+  final int durationMins;
+
+  AppointmentKind({
+    required this.id,
+    required this.name,
+    required this.durationMins,
+  });
+
+  factory AppointmentKind.fromJson(Map<String, dynamic> json) {
+    return AppointmentKind(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      durationMins: (json['durationMins'] as num?)?.toInt() ?? 0,
+    );
+  }
+}

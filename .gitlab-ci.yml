@@ -1,0 +1,284 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║  Health Platform — GitLab CI/CD                                            ║
+# ║  mobile-patient  |  mobile-pro                                             ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+#
+# Déclencheurs :
+#   • Merge Request vers main    → test uniquement (path-based)
+#   • Push sur main              → test + déploiement beta (Firebase / TestFlight)
+#   • Tag mobile-patient/v*      → déploiement production patient (manuel)
+#   • Tag mobile-pro/v*          → déploiement production pro (manuel)
+#
+# Runners requis :
+#   • Android / test : runner Linux avec image Docker cirruslabs/flutter
+#   • iOS            : runner macOS self-hosted avec tag "macos" et Flutter installé
+#
+# Variables CI/CD à définir dans GitLab → Settings → CI/CD → Variables :
+#   Voir section "Secrets" en bas de ce fichier.
+
+stages:
+  - test
+  - beta
+  - release
+
+# ─── Images & bases communes ──────────────────────────────────────────────────
+
+# Image Flutter officielle cirruslabs (Flutter + Android SDK + Java 17)
+# https://github.com/cirruslabs/docker-images-flutter
+variables:
+  FLUTTER_IMAGE: "ghcr.io/cirruslabs/flutter:stable"
+
+# Base Android : runner Linux + Docker
+.android-base:
+  image: $FLUTTER_IMAGE
+  before_script:
+    - flutter --version
+    - java -version
+    - cd "$APP_DIR"
+    - gem install bundler --no-document --quiet
+    - bundle install --quiet
+
+# Base iOS : runner macOS self-hosted (tag "macos")
+# Flutter, Xcode et CocoaPods doivent être installés sur le runner.
+.ios-base:
+  tags:
+    - macos
+    - ios
+  before_script:
+    - flutter --version
+    - cd "$APP_DIR"
+    - cd ios && pod install --repo-update && cd ..
+    - gem install bundler --no-document --quiet
+    - bundle install --quiet
+
+# ─── mobile-patient ───────────────────────────────────────────────────────────
+
+test:mobile-patient:
+  extends: .android-base
+  stage: test
+  variables:
+    APP_DIR: apps/mobile-patient
+  rules:
+    # Sur toute MR qui modifie l'app patient
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - apps/mobile-patient/**/*
+        - .gitlab-ci.yml
+    # Sur push vers main
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - apps/mobile-patient/**/*
+    # Sur tag de release patient
+    - if: $CI_COMMIT_TAG =~ /^mobile-patient\/v.*/
+  script:
+    - flutter pub get
+    - flutter analyze --no-fatal-infos
+    - flutter test --coverage
+  coverage: '/lines\s*:\s*\d+\.\d+%/'
+  artifacts:
+    paths:
+      - apps/mobile-patient/coverage/lcov.info
+    expire_in: 1 week
+
+deploy:patient:android:beta:
+  extends: .android-base
+  stage: beta
+  needs: ["test:mobile-patient"]
+  variables:
+    APP_DIR: apps/mobile-patient
+    BUILD_NUMBER: $CI_PIPELINE_IID
+    ANDROID_KEYSTORE_BASE64: $ANDROID_PATIENT_KEYSTORE_BASE64
+    ANDROID_STORE_PASSWORD: $ANDROID_PATIENT_STORE_PASSWORD
+    ANDROID_KEY_ALIAS: $ANDROID_PATIENT_KEY_ALIAS
+    ANDROID_KEY_PASSWORD: $ANDROID_PATIENT_KEY_PASSWORD
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - apps/mobile-patient/**/*
+  environment:
+    name: mobile-patient/beta
+  script:
+    - bundle exec fastlane android beta
+
+deploy:patient:android:release:
+  extends: .android-base
+  stage: release
+  needs: ["test:mobile-patient"]
+  when: manual
+  variables:
+    APP_DIR: apps/mobile-patient
+    BUILD_NUMBER: $CI_PIPELINE_IID
+    ANDROID_KEYSTORE_BASE64: $ANDROID_PATIENT_KEYSTORE_BASE64
+    ANDROID_STORE_PASSWORD: $ANDROID_PATIENT_STORE_PASSWORD
+    ANDROID_KEY_ALIAS: $ANDROID_PATIENT_KEY_ALIAS
+    ANDROID_KEY_PASSWORD: $ANDROID_PATIENT_KEY_PASSWORD
+    GOOGLE_PLAY_JSON_KEY: $GOOGLE_PLAY_PATIENT_JSON_KEY
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^mobile-patient\/v.*/
+      when: manual
+  environment:
+    name: mobile-patient/production
+  script:
+    - bundle exec fastlane android release
+
+deploy:patient:ios:beta:
+  extends: .ios-base
+  stage: beta
+  needs: ["test:mobile-patient"]
+  variables:
+    APP_DIR: apps/mobile-patient
+    BUILD_NUMBER: $CI_PIPELINE_IID
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - apps/mobile-patient/**/*
+  environment:
+    name: mobile-patient/beta
+  script:
+    - bundle exec fastlane ios beta
+
+deploy:patient:ios:release:
+  extends: .ios-base
+  stage: release
+  needs: ["test:mobile-patient"]
+  when: manual
+  variables:
+    APP_DIR: apps/mobile-patient
+    BUILD_NUMBER: $CI_PIPELINE_IID
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^mobile-patient\/v.*/
+      when: manual
+  environment:
+    name: mobile-patient/production
+  script:
+    - bundle exec fastlane ios release
+
+# ─── mobile-pro ───────────────────────────────────────────────────────────────
+
+test:mobile-pro:
+  extends: .android-base
+  stage: test
+  variables:
+    APP_DIR: apps/mobile-pro
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - apps/mobile-pro/**/*
+        - .gitlab-ci.yml
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - apps/mobile-pro/**/*
+    - if: $CI_COMMIT_TAG =~ /^mobile-pro\/v.*/
+  script:
+    - flutter pub get
+    - flutter analyze --no-fatal-infos
+    - flutter test --coverage
+  coverage: '/lines\s*:\s*\d+\.\d+%/'
+  artifacts:
+    paths:
+      - apps/mobile-pro/coverage/lcov.info
+    expire_in: 1 week
+
+deploy:pro:android:beta:
+  extends: .android-base
+  stage: beta
+  needs: ["test:mobile-pro"]
+  variables:
+    APP_DIR: apps/mobile-pro
+    BUILD_NUMBER: $CI_PIPELINE_IID
+    ANDROID_KEYSTORE_BASE64: $ANDROID_PRO_KEYSTORE_BASE64
+    ANDROID_STORE_PASSWORD: $ANDROID_PRO_STORE_PASSWORD
+    ANDROID_KEY_ALIAS: $ANDROID_PRO_KEY_ALIAS
+    ANDROID_KEY_PASSWORD: $ANDROID_PRO_KEY_PASSWORD
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - apps/mobile-pro/**/*
+  environment:
+    name: mobile-pro/beta
+  script:
+    - bundle exec fastlane android beta
+
+deploy:pro:android:release:
+  extends: .android-base
+  stage: release
+  needs: ["test:mobile-pro"]
+  when: manual
+  variables:
+    APP_DIR: apps/mobile-pro
+    BUILD_NUMBER: $CI_PIPELINE_IID
+    ANDROID_KEYSTORE_BASE64: $ANDROID_PRO_KEYSTORE_BASE64
+    ANDROID_STORE_PASSWORD: $ANDROID_PRO_STORE_PASSWORD
+    ANDROID_KEY_ALIAS: $ANDROID_PRO_KEY_ALIAS
+    ANDROID_KEY_PASSWORD: $ANDROID_PRO_KEY_PASSWORD
+    GOOGLE_PLAY_JSON_KEY: $GOOGLE_PLAY_PRO_JSON_KEY
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^mobile-pro\/v.*/
+      when: manual
+  environment:
+    name: mobile-pro/production
+  script:
+    - bundle exec fastlane android release
+
+deploy:pro:ios:beta:
+  extends: .ios-base
+  stage: beta
+  needs: ["test:mobile-pro"]
+  variables:
+    APP_DIR: apps/mobile-pro
+    BUILD_NUMBER: $CI_PIPELINE_IID
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - apps/mobile-pro/**/*
+  environment:
+    name: mobile-pro/beta
+  script:
+    - bundle exec fastlane ios beta
+
+deploy:pro:ios:release:
+  extends: .ios-base
+  stage: release
+  needs: ["test:mobile-pro"]
+  when: manual
+  variables:
+    APP_DIR: apps/mobile-pro
+    BUILD_NUMBER: $CI_PIPELINE_IID
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^mobile-pro\/v.*/
+      when: manual
+  environment:
+    name: mobile-pro/production
+  script:
+    - bundle exec fastlane ios release
+
+# ─── Variables CI/CD à configurer dans GitLab ─────────────────────────────────
+#
+# GitLab → Settings → CI/CD → Variables
+# Toutes marquées "Masked" et "Protected" sauf indication contraire.
+#
+# Android — patient
+#   ANDROID_PATIENT_KEYSTORE_BASE64   base64 du fichier .jks/.keystore
+#   ANDROID_PATIENT_STORE_PASSWORD    mot de passe du keystore
+#   ANDROID_PATIENT_KEY_ALIAS         alias de la clé
+#   ANDROID_PATIENT_KEY_PASSWORD      mot de passe de la clé
+#   FIREBASE_PATIENT_APP_ID           App ID Firebase (distribution beta Android)
+#   GOOGLE_PLAY_PATIENT_JSON_KEY      JSON service account Google Play (production)
+#
+# Android — pro
+#   ANDROID_PRO_KEYSTORE_BASE64
+#   ANDROID_PRO_STORE_PASSWORD
+#   ANDROID_PRO_KEY_ALIAS
+#   ANDROID_PRO_KEY_PASSWORD
+#   FIREBASE_PRO_APP_ID
+#   GOOGLE_PLAY_PRO_JSON_KEY
+#
+# iOS — partagé entre les deux apps
+#   APPLE_ID                           exemple : dev@healthplatform.com
+#   APPLE_DEVELOPER_TEAM_ID            exemple : ABCD1234EF
+#   APP_STORE_CONNECT_TEAM_ID          ID équipe App Store Connect
+#   APP_STORE_CONNECT_API_KEY_ID       ID de la clé API .p8
+#   APP_STORE_CONNECT_API_KEY_ISSUER_ID  Issuer ID de la clé API
+#   APP_STORE_CONNECT_API_KEY_CONTENT  contenu du fichier .p8 encodé en base64
+#   MATCH_GIT_URL                      SSH ou HTTPS du dépôt privé Match
+#   MATCH_PASSWORD                     mot de passe de chiffrement Match
