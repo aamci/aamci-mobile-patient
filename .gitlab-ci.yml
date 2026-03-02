@@ -35,7 +35,7 @@ stages:
 
 variables:
   FLUTTER_IMAGE: "ghcr.io/cirruslabs/flutter:stable"
-  APP_DIR: "apps/mobile-patient"
+  APP_DIR: "."
 
 # ─── Bases ────────────────────────────────────────────────────────────────────
 
@@ -75,7 +75,7 @@ test:mobile-patient:
   coverage: '/lines\s*:\s*\d+\.\d+%/'
   artifacts:
     paths:
-      - apps/mobile-patient/coverage/lcov.info
+      - coverage/lcov.info
     expire_in: 1 week
 
 # ─── Android ──────────────────────────────────────────────────────────────────
