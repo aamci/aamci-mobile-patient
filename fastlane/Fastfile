@@ -62,7 +62,7 @@ platform :android do
       keystore_b64 = ENV["ANDROID_KEYSTORE_BASE64"]
       UI.user_error!("ANDROID_KEYSTORE_BASE64 non définie") unless keystore_b64
       require "base64"
-      File.binwrite(keystore_path, Base64.strict_decode64(keystore_b64))
+      File.binwrite(keystore_path, Base64.decode64(keystore_b64.gsub(/\s+/, '')))
     end
     File.write(
       File.join(FLUTTER_ROOT, "android", "key.properties"),
