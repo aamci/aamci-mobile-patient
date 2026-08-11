@@ -20,3 +20,7 @@
 
 # Biometric
 -keep class androidx.biometric.** { *; }
+
+# Play Core (referenced by Flutter deferred components — not used but R8 needs to ignore them)
+-dontwarn com.google.android.play.core.**
+-keep class com.google.android.play.core.** { *; }
