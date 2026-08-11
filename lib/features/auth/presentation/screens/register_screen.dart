@@ -163,8 +163,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: authState.status == AuthStatus.emailVerificationRequired
-                          ? Colors.green.withOpacity(0.1)
-                          : Theme.of(context).colorScheme.error.withOpacity(0.1),
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: authState.status == AuthStatus.emailVerificationRequired

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/consents_provider.dart';
+import '../../data/datasources/consents_remote_datasource.dart';
 
 class _ConsentMeta {
   final String type;
@@ -151,7 +152,7 @@ class _ConsentsScreenState extends ConsumerState<ConsentsScreen> {
                                           onChanged: meta.locked
                                               ? null
                                               : (v) => _confirmToggle(context, meta.label, meta.type, v),
-                                          activeColor: const Color(0xFF0D9488),
+                                          activeThumbColor: const Color(0xFF0D9488),
                                         ),
                                 ],
                               ),
