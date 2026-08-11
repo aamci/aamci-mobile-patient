@@ -45,8 +45,8 @@ variables:
     - flutter --version
     - java -version
     - cd "$APP_DIR"
-    - gem install bundler -v ">= 2.4.22" --no-document --quiet
-    - bundle _$(gem list bundler --silent | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1)_ install --quiet
+    - gem install bundler -v "2.5.0" --no-document --quiet
+    - bundle _2.5.0_ install --quiet
 
 .ios-base:
   tags:
@@ -56,8 +56,8 @@ variables:
     - flutter --version
     - cd "$APP_DIR"
     - cd ios && pod install --repo-update && cd ..
-    - gem install bundler -v ">= 2.4.22" --no-document --quiet
-    - bundle _$(gem list bundler --silent | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -1)_ install --quiet
+    - gem install bundler -v "2.5.0" --no-document --quiet
+    - bundle _2.5.0_ install --quiet
 
 # ─── Validation README ────────────────────────────────────────────────────────
 
