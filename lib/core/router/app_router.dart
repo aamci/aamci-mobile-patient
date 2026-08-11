@@ -4,6 +4,8 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/doctors/presentation/screens/doctors_screen.dart';
 import '../../features/doctors/presentation/screens/doctor_detail_screen.dart';
@@ -23,6 +25,11 @@ import '../../features/documents/presentation/screens/documents_screen.dart';
 import '../../features/facilities/presentation/screens/facilities_screen.dart';
 import '../../features/facilities/presentation/screens/facility_detail_screen.dart';
 import '../../features/teleconsultation/presentation/screens/teleconsultation_screen.dart';
+import '../../features/privacy/presentation/screens/privacy_screen.dart';
+import '../../features/insurance/presentation/screens/insurance_screen.dart';
+import '../../features/emergency_contacts/presentation/screens/emergency_contacts_screen.dart';
+import '../../features/invoices/presentation/screens/invoices_screen.dart';
+import '../../features/consents/presentation/screens/consents_screen.dart';
 import 'shell_scaffold.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -56,6 +63,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          return ResetPasswordScreen(token: token);
+        },
       ),
       GoRoute(
         path: '/doctor/:id',
@@ -119,6 +137,26 @@ final routerProvider = Provider<GoRouter>((ref) {
             participantName: extra['name'] as String? ?? 'Conversation',
           );
         },
+      ),
+      GoRoute(
+        path: '/privacy',
+        builder: (context, state) => const PrivacyScreen(),
+      ),
+      GoRoute(
+        path: '/insurance',
+        builder: (context, state) => const InsuranceScreen(),
+      ),
+      GoRoute(
+        path: '/emergency-contacts',
+        builder: (context, state) => const EmergencyContactsScreen(),
+      ),
+      GoRoute(
+        path: '/invoices',
+        builder: (context, state) => const InvoicesScreen(),
+      ),
+      GoRoute(
+        path: '/consents',
+        builder: (context, state) => const ConsentsScreen(),
       ),
       GoRoute(
         path: '/teleconsultation/:appointmentId',

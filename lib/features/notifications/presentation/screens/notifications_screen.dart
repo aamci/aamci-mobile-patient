@@ -62,22 +62,38 @@ class NotificationsScreen extends ConsumerWidget {
                 final message = notif['message'] as String? ?? '';
                 final type = notif['type'] as String?;
 
+                final badge = _badgeForType(type);
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: isRead
-                        ? Colors.grey[200]
-                        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    backgroundColor: isRead ? Colors.grey[200] : _colorForType(type).withValues(alpha: 0.15),
                     child: Icon(
                       _iconForType(type),
-                      color: isRead ? Colors.grey[500] : Theme.of(context).colorScheme.primary,
+                      color: isRead ? Colors.grey[500] : _colorForType(type),
                       size: 20,
                     ),
                   ),
-                  title: Text(
-                    title,
-                    style: TextStyle(
-                      fontWeight: isRead ? FontWeight.normal : FontWeight.w600,
-                    ),
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyle(fontWeight: isRead ? FontWeight.normal : FontWeight.w600),
+                        ),
+                      ),
+                      if (badge != null)
+                        Container(
+                          margin: const EdgeInsets.only(left: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: badge['color'] as Color,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            badge['label'] as String,
+                            style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                    ],
                   ),
                   subtitle: Text(
                     message,
@@ -85,7 +101,7 @@ class NotificationsScreen extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: Colors.grey[600], fontSize: 13),
                   ),
-                  tileColor: isRead ? null : Theme.of(context).colorScheme.primary.withValues(alpha: 0.02),
+                  tileColor: isRead ? null : _colorForType(type).withValues(alpha: 0.03),
                   onTap: () async {
                     if (!isRead) {
                       final id = notif['id']?.toString();
@@ -107,16 +123,39 @@ class NotificationsScreen extends ConsumerWidget {
 
   IconData _iconForType(String? type) {
     switch (type) {
-      case 'APPOINTMENT_REMINDER':
-        return Icons.alarm;
-      case 'APPOINTMENT_CONFIRMED':
-        return Icons.check_circle_outline;
-      case 'APPOINTMENT_CANCELLED':
-        return Icons.cancel_outlined;
-      case 'APPOINTMENT_RESCHEDULED':
-        return Icons.update;
+      case 'APPOINTMENT_REMINDER':    return Icons.alarm;
+      case 'APPOINTMENT_CONFIRMED':   return Icons.check_circle_outline;
+      case 'APPOINTMENT_CANCELLED':   return Icons.cancel_outlined;
+      case 'APPOINTMENT_RESCHEDULED': return Icons.update;
+      case 'NEW_MESSAGE':             return Icons.chat_bubble_outline;
+      case 'ALERT':                   return Icons.warning_amber_outlined;
+      case 'PRESCRIPTION_EXPIRED':    return Icons.medication_outlined;
+      default:                        return Icons.notifications_outlined;
+    }
+  }
+
+  Color _colorForType(String? type) {
+    switch (type) {
+      case 'NEW_MESSAGE':             return const Color(0xFF0D9488);
+      case 'ALERT':                   return const Color(0xFFDC2626);
+      case 'PRESCRIPTION_EXPIRED':    return const Color(0xFFF97316);
+      default:                        return const Color(0xFF2563EB);
+    }
+  }
+
+  Map<String, dynamic>? _badgeForType(String? type) {
+    switch (type) {
+      case 'NEW_MESSAGE':
+        return {'label': 'Message', 'color': const Color(0xFF0D9488)};
+      case 'ALERT':
+        return {'label': 'Alerte', 'color': const Color(0xFFDC2626)};
+      case 'PRESCRIPTION_EXPIRED':
+        return {'label': 'Ordonnance', 'color': const Color(0xFFF97316)};
       default:
-        return Icons.notifications_outlined;
+        if (type != null && type.startsWith('APPOINTMENT_')) {
+          return {'label': 'RDV', 'color': const Color(0xFF2563EB)};
+        }
+        return null;
     }
   }
 }

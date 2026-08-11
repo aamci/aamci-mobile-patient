@@ -38,7 +38,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.healthplatform.mobile_patient"
+        applicationId = "com.ibogha.patient"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -52,7 +52,9 @@ android {
             } else {
                 signingConfigs.getByName("debug") // fallback local dev only
             }
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }

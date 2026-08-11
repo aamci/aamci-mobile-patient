@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/constants/api_endpoints.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -97,10 +98,46 @@ class ProfileScreen extends ConsumerWidget {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/facilities'),
                 ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.health_and_safety_outlined),
+                  title: const Text('Assurance maladie'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/insurance'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.emergency_outlined),
+                  title: const Text('Contacts d\'urgence'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/emergency-contacts'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.receipt_outlined),
+                  title: const Text('Mes factures'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/invoices'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.privacy_tip_outlined),
+                  title: const Text('Mes consentements'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/consents'),
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => context.push('/privacy'),
+            child: const Text(
+              'Politique de confidentialité',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+          ),
+          const SizedBox(height: 8),
           ElevatedButton.icon(
             onPressed: () => ref.read(authProvider.notifier).logout(),
             icon: const Icon(Icons.logout),
@@ -110,8 +147,56 @@ class ProfileScreen extends ConsumerWidget {
               foregroundColor: Colors.red,
             ),
           ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => _confirmDeleteAccount(context, ref),
+            child: const Text(
+              'Supprimer mon compte',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer le compte'),
+        content: const Text(
+          'Cette action est irréversible. Toutes vos données (rendez-vous, dossier médical, documents) seront définitivement supprimées.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Supprimer définitivement'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      await apiClient.delete(ApiEndpoints.deleteAccount);
+      await ref.read(authProvider.notifier).logout();
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Erreur lors de la suppression. Veuillez réessayer.'),
+        backgroundColor: Colors.red,
+      ));
+    }
   }
 }

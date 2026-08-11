@@ -7,7 +7,7 @@ git_branch("mobile-patient")
 storage_mode("git")
 type("appstore") # appstore | adhoc | development | enterprise
 
-app_identifier(["com.healthplatform.mobilePatient"])
+app_identifier(["com.ibogha.patient"])
 username(ENV["APPLE_ID"])
 
 # En CI, toujours en lecture seule (les certificats sont déjà créés)

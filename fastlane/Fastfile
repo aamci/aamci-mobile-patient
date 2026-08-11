@@ -3,8 +3,8 @@
 # Répertoire racine du projet Flutter (parent du dossier fastlane/)
 FLUTTER_ROOT = File.expand_path("..", __dir__)
 
-APP_BUNDLE_ID    = "com.healthplatform.mobilePatient"
-APP_BUNDLE_ID_AN = "com.healthplatform.mobile_patient"
+APP_BUNDLE_ID    = "com.ibogha.patient"
+APP_BUNDLE_ID_AN = "com.ibogha.patient"
 
 before_all do
   Dir.chdir(FLUTTER_ROOT) { sh("flutter pub get") }

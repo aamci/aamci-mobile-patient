@@ -4,6 +4,10 @@ class ApiEndpoints {
   static const String register = '/auth/register';
   static const String logout = '/auth/logout';
   static const String me = '/auth/me';
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String resetPassword = '/auth/reset-password';
+  static const String resendVerification = '/auth/resend-verification';
+  static const String deleteAccount = '/auth/account';
 
   // Search
   static const String searchDoctors = '/search/doctors';
@@ -57,7 +61,22 @@ class ApiEndpoints {
 
   // Reviews
   static String doctorReviews(String doctorId) => '/reviews/doctor/$doctorId';
+  static const String reviews = '/reviews';
+
+  // Insurance
+  static const String insurance = '/me/insurance';
+
+  // Emergency contacts
+  static String emergencyContacts(String userId) => '/patient-record/$userId/emergency-contacts';
+  static String emergencyContactById(String id) => '/patient-record/emergency-contacts/$id';
+
+  // Invoices
+  static const String invoices = '/invoices';
+
+  // Consents
+  static String patientConsents(String userId) => '/patient-record/$userId/consents';
 
   // Teleconsultation
   static String startVideo(String appointmentId) => '/appointments/$appointmentId/start-video';
+  static String endVideo(String appointmentId) => '/appointments/$appointmentId/end-video';
 }

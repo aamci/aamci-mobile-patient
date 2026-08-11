@@ -27,6 +27,7 @@ class AuthRemoteDatasource {
         'password': password,
         'fullName': fullName,
         'role': 'PATIENT',
+        'consentedToTerms': true,
       },
     );
     final data = response.data as Map<String, dynamic>;
@@ -49,5 +50,26 @@ class AuthRemoteDatasource {
       await _apiClient.post(ApiEndpoints.logout);
     } catch (_) {}
     await _storage.clearAll();
+  }
+
+  Future<void> forgotPassword(String email) async {
+    await _apiClient.post(
+      ApiEndpoints.forgotPassword,
+      data: {'email': email},
+    );
+  }
+
+  Future<void> resetPassword(String token, String password) async {
+    await _apiClient.post(
+      ApiEndpoints.resetPassword,
+      data: {'token': token, 'password': password},
+    );
+  }
+
+  Future<void> resendVerification(String email) async {
+    await _apiClient.post(
+      ApiEndpoints.resendVerification,
+      data: {'email': email},
+    );
   }
 }

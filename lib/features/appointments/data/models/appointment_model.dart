@@ -10,6 +10,7 @@ class AppointmentModel {
   final AppointmentSlot? slot;
   final AppointmentPatient? patient;
   final AppointmentKind? kind;
+  final AppointmentDoctor? doctor;
 
   AppointmentModel({
     required this.id,
@@ -23,7 +24,10 @@ class AppointmentModel {
     this.slot,
     this.patient,
     this.kind,
+    this.doctor,
   });
+
+  String? get doctorName => doctor?.fullName ?? slot?.doctorName;
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
     return AppointmentModel(
@@ -43,6 +47,9 @@ class AppointmentModel {
           : null,
       kind: json['kind'] is Map
           ? AppointmentKind.fromJson(json['kind'] as Map<String, dynamic>)
+          : null,
+      doctor: json['doctor'] is Map
+          ? AppointmentDoctor.fromJson(json['doctor'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -73,20 +80,38 @@ class AppointmentSlot {
   final String ownerId;
   final DateTime start;
   final DateTime end;
+  final String? doctorName;
 
   AppointmentSlot({
     required this.id,
     required this.ownerId,
     required this.start,
     required this.end,
+    this.doctorName,
   });
 
   factory AppointmentSlot.fromJson(Map<String, dynamic> json) {
+    final owner = json['owner'] as Map<String, dynamic>?;
     return AppointmentSlot(
       id: json['id']?.toString() ?? '',
       ownerId: json['ownerId']?.toString() ?? '',
       start: DateTime.tryParse(json['start']?.toString() ?? '') ?? DateTime.now(),
       end: DateTime.tryParse(json['end']?.toString() ?? '') ?? DateTime.now(),
+      doctorName: owner?['fullName']?.toString(),
+    );
+  }
+}
+
+class AppointmentDoctor {
+  final String id;
+  final String? fullName;
+
+  AppointmentDoctor({required this.id, this.fullName});
+
+  factory AppointmentDoctor.fromJson(Map<String, dynamic> json) {
+    return AppointmentDoctor(
+      id: json['id']?.toString() ?? '',
+      fullName: json['fullName']?.toString(),
     );
   }
 }

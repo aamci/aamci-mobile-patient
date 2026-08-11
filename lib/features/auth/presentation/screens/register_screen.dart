@@ -18,6 +18,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  bool _consentAccepted = false;
 
   @override
   void dispose() {
@@ -30,6 +31,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    if (!_consentAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Vous devez accepter la politique de confidentialité pour créer un compte.'),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
     ref.read(authProvider.notifier).register(
           _emailController.text.trim(),
           _passwordController.text,
@@ -119,7 +127,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Champ requis';
-                    if (v.length < 6) return 'Minimum 6 caractères';
+                    if (v.length < 8) return 'Minimum 8 caractères';
                     return null;
                   },
                 ),
@@ -178,7 +186,51 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ],
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 16),
+
+                // Consent checkbox
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Checkbox(
+                      value: _consentAccepted,
+                      onChanged: (v) => setState(() => _consentAccepted = v ?? false),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _consentAccepted = !_consentAccepted),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: RichText(
+                            text: TextSpan(
+                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                              children: [
+                                const TextSpan(text: "J'ai lu et j'accepte la "),
+                                WidgetSpan(
+                                  child: GestureDetector(
+                                    onTap: () => context.push('/privacy'),
+                                    child: const Text(
+                                      'politique de confidentialité',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF0D9488),
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const TextSpan(text: '.'),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
 
                 ElevatedButton(
                   onPressed:
