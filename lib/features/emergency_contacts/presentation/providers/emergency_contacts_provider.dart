@@ -39,10 +39,11 @@ class EmergencyContactsNotifier extends StateNotifier<EmergencyContactsState> {
       : super(const EmergencyContactsState());
 
   Future<void> load() async {
-    if (_userId == null) return;
+    final userId = _userId;
+    if (userId == null) return;
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final contacts = await _datasource.getContacts(_userId!);
+      final contacts = await _datasource.getContacts(userId);
       state = state.copyWith(isLoading: false, contacts: contacts);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Erreur de chargement');
@@ -50,9 +51,10 @@ class EmergencyContactsNotifier extends StateNotifier<EmergencyContactsState> {
   }
 
   Future<bool> add(Map<String, dynamic> data) async {
-    if (_userId == null) return false;
+    final userId = _userId;
+    if (userId == null) return false;
     try {
-      final contact = await _datasource.createContact(_userId!, data);
+      final contact = await _datasource.createContact(userId, data);
       state = state.copyWith(contacts: [...state.contacts, contact]);
       return true;
     } catch (e) {
