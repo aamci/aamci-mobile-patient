@@ -31,6 +31,10 @@ Application Flutter (Dart) ciblant Android et iOS. Authentification JWT avec sup
 | flutter_lints | 5.0.x | Dev | Règles de lint officielles Flutter |
 | build_runner | 2.4.x | Dev | Runner de génération de code (json_serializable) |
 | json_serializable | 6.9.x | Dev | Génération automatique des méthodes `toJson`/`fromJson` |
+| camera | 0.11.x | Matériel | Accès à la caméra pour la téléconsultation vidéo |
+| permission_handler | 11.x | Système | Gestion des permissions runtime (caméra, micro) |
+| flutter_launcher_icons | 0.14.x | Dev | Génération automatique des icônes d'application |
+| flutter_native_splash | 2.4.x | Dev | Génération de l'écran de démarrage natif |
 <!-- STACK:END -->
 
 ---
