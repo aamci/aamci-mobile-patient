@@ -64,12 +64,15 @@ platform :android do
       require "base64"
       File.binwrite(keystore_path, Base64.decode64(keystore_b64.gsub(/\s+/, '')))
     end
+    store_pw = ENV.fetch("ANDROID_STORE_PASSWORD")
+    # PKCS12 keystores require key password == store password
+    key_pw   = ENV.fetch("ANDROID_KEY_PASSWORD", store_pw)
     File.write(
       File.join(FLUTTER_ROOT, "android", "key.properties"),
       [
-        "storePassword=#{ENV.fetch('ANDROID_STORE_PASSWORD')}",
-        "keyPassword=#{ENV.fetch('ANDROID_KEY_PASSWORD')}",
-        "keyAlias=#{ENV.fetch('ANDROID_KEY_ALIAS', 'release')}",
+        "storePassword=#{store_pw}",
+        "keyPassword=#{key_pw}",
+        "keyAlias=#{ENV.fetch('ANDROID_KEY_ALIAS', 'ibogha-patient')}",
         "storeFile=../release.keystore"
       ].join("\n")
     )
