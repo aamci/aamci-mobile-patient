@@ -36,12 +36,20 @@ stages:
 variables:
   FLUTTER_IMAGE: "ghcr.io/cirruslabs/flutter:stable"
   APP_DIR: "."
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
 
 # ─── Bases ────────────────────────────────────────────────────────────────────
 
 .android-base:
   image: $FLUTTER_IMAGE
+  cache:
+    key: "android-patient-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .gradle/
+      - .pub-cache/
+    policy: pull-push
   before_script:
+    - export PUB_CACHE="$CI_PROJECT_DIR/.pub-cache"
     - flutter --version
     - java -version
     - cd "$APP_DIR"
