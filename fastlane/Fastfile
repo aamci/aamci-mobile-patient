@@ -28,15 +28,20 @@ platform :android do
     Dir.chdir(FLUTTER_ROOT) do
       sh("flutter build appbundle --release --build-number=#{build_number}")
     end
-    upload_to_play_store(
-      track:                   "internal",
-      aab:                     "#{FLUTTER_ROOT}/build/app/outputs/bundle/release/app-release.aab",
-      json_key_data:           ENV.fetch("GOOGLE_PLAY_JSON_KEY"),
-      skip_upload_screenshots: true,
-      skip_upload_images:      true,
-      skip_upload_metadata:    true,
-      release_status:          "draft"
-    )
+    json_key = ENV["GOOGLE_PLAY_JSON_KEY"]
+    if json_key.nil? || json_key.empty?
+      UI.important("GOOGLE_PLAY_JSON_KEY non définie — build produit mais non uploadé.")
+    else
+      upload_to_play_store(
+        track:                   "internal",
+        aab:                     "#{FLUTTER_ROOT}/build/app/outputs/bundle/release/app-release.aab",
+        json_key_data:           json_key,
+        skip_upload_screenshots: true,
+        skip_upload_images:      true,
+        skip_upload_metadata:    true,
+        release_status:          "draft"
+      )
+    end
   end
 
   desc "Build AAB + déploiement Google Play (production)"
