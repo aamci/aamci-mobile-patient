@@ -50,7 +50,7 @@ platform :android do
         skip_upload_screenshots: true,
         skip_upload_images:      true,
         skip_upload_metadata:    true,
-        release_status:          "draft"
+        release_status:          "completed"
       )
     end
   end
