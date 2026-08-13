@@ -1,4 +1,2 @@
 # Fastlane plugins
 # Install via: bundle exec fastlane add_plugin <name>
-
-gem "fastlane-plugin-firebase_app_distribution"

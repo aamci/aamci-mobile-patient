@@ -21,19 +21,21 @@ platform :android do
     end
   end
 
-  desc "Build AAB + déploiement Firebase App Distribution (test interne)"
+  desc "Build AAB + déploiement Google Play Internal Testing"
   lane :beta do
     setup_signing_android
     build_number = ENV.fetch("BUILD_NUMBER", Time.now.strftime("%Y%m%d%H%M"))
     Dir.chdir(FLUTTER_ROOT) do
       sh("flutter build appbundle --release --build-number=#{build_number}")
     end
-    firebase_app_distribution(
-      app:                    ENV.fetch("FIREBASE_PATIENT_APP_ID"),
-      groups:                 "internal-testers",
-      android_artifact_type:  "AAB",
-      android_artifact_path:  "#{FLUTTER_ROOT}/build/app/outputs/bundle/release/app-release.aab",
-      release_notes:          "Build #{build_number} — #{last_git_commit[:message]}"
+    upload_to_play_store(
+      track:                   "internal",
+      aab:                     "#{FLUTTER_ROOT}/build/app/outputs/bundle/release/app-release.aab",
+      json_key_data:           ENV.fetch("GOOGLE_PLAY_JSON_KEY"),
+      skip_upload_screenshots: true,
+      skip_upload_images:      true,
+      skip_upload_metadata:    true,
+      release_status:          "draft"
     )
   end
 
