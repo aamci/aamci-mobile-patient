@@ -96,14 +96,16 @@ platform :android do
     store_pw = ENV.fetch("ANDROID_STORE_PASSWORD")
     # PKCS12 keystores require key password == store password
     key_pw   = ENV.fetch("ANDROID_KEY_PASSWORD", store_pw)
-    UI.message("=== Keystore aliases ===")
+    key_alias = ENV.fetch("ANDROID_KEY_ALIAS", "ibogha-patient")
+    UI.message("=== Keystore debug ===")
+    UI.message("Key alias used: #{key_alias}")
     sh("keytool -list -keystore #{keystore_path} -storepass '#{store_pw}' 2>&1 || true")
     File.write(
       File.join(FLUTTER_ROOT, "android", "key.properties"),
       [
         "storePassword=#{store_pw}",
         "keyPassword=#{key_pw}",
-        "keyAlias=#{ENV.fetch('ANDROID_KEY_ALIAS', 'ibogha-patient')}",
+        "keyAlias=#{key_alias}",
         "storeFile=../release.keystore"
       ].join("\n")
     )
