@@ -24,6 +24,7 @@ platform :android do
   desc "Build AAB + déploiement Google Play Internal Testing"
   lane :beta do
     setup_signing_android
+    write_gradle_properties
     build_number = ENV.fetch("BUILD_NUMBER", Time.now.strftime("%Y%m%d%H%M"))
     Dir.chdir(FLUTTER_ROOT) do
       sh("flutter build appbundle --release --build-number=#{build_number}")
@@ -58,6 +59,7 @@ platform :android do
   desc "Build AAB + déploiement Google Play (production)"
   lane :release do
     setup_signing_android
+    write_gradle_properties
     build_number = ENV.fetch("BUILD_NUMBER", Time.now.strftime("%Y%m%d%H%M"))
     Dir.chdir(FLUTTER_ROOT) do
       sh("flutter build appbundle --release --build-number=#{build_number}")
@@ -71,6 +73,17 @@ platform :android do
       skip_upload_metadata:    true,
       release_status:          "draft"  # passe à "completed" après validation manuelle
     )
+  end
+
+  # Écrit gradle.properties avec des limites mémoire strictes (résiste à Flutter upgrade)
+  private_lane :write_gradle_properties do
+    File.write(File.join(FLUTTER_ROOT, "android", "gradle.properties"), <<~PROPS)
+      org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m -XX:ReservedCodeCacheSize=256m
+      org.gradle.daemon=false
+      org.gradle.parallel=false
+      android.useAndroidX=true
+      kotlin.daemon.jvm.options=-Xmx512m -Xms64m
+    PROPS
   end
 
   # Prépare le keystore et key.properties depuis les variables d'environnement CI

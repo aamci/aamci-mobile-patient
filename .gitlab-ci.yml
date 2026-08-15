@@ -37,6 +37,7 @@ variables:
   FLUTTER_IMAGE: "ghcr.io/cirruslabs/flutter:stable"
   APP_DIR: "."
   GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  GRADLE_OPTS: "-Xmx1536m -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=128m -Dorg.gradle.daemon=false -Dorg.gradle.parallel=false"
 
 # ─── Bases ────────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,9 @@ variables:
     - export PUB_CACHE="$CI_PROJECT_DIR/.pub-cache"
     - flutter --version
     - java -version
+    - yes | sdkmanager --licenses > /dev/null 2>&1 || true
+    - sdkmanager "ndk;28.2.13676358" "build-tools;35.0.0" "platforms;android-34" > /dev/null 2>&1
+    - mkdir -p ~/.gradle && printf 'org.gradle.daemon=false\norg.gradle.parallel=false\n' > ~/.gradle/gradle.properties
     - cd "$APP_DIR"
     - gem install bundler -v "2.5.0" --no-document --quiet
     - bundle _2.5.0_ install --quiet
@@ -64,11 +68,18 @@ variables:
     - macos
     - ios
   before_script:
+    - export LANG=en_US.UTF-8
+    - export LC_ALL=en_US.UTF-8
+    - export RUBYOPT="-Eutf-8:utf-8"
+    - export PATH="/usr/local/opt/ruby@3.3/bin:$PATH"
+    - export GEM_HOME="$HOME/.gem-x86"
+    - export PATH="$GEM_HOME/bin:$PATH"
+    - ruby --version
     - flutter --version
     - cd "$APP_DIR"
-    - cd ios && pod install --repo-update && cd ..
     - gem install bundler -v "2.5.0" --no-document --quiet
-    - bundle _2.5.0_ install --quiet
+    - arch -x86_64 bundle _2.5.0_ install --quiet
+    - cd ios && LANG=en_US.UTF-8 RUBYOPT="-Eutf-8:utf-8" /usr/local/bin/pod install --repo-update && cd ..
 
 # ─── Validation README ────────────────────────────────────────────────────────
 
