@@ -89,8 +89,8 @@ platform :android do
   # Prépare le keystore et key.properties depuis les variables d'environnement CI
   private_lane :setup_signing_android do
     keystore_path = File.join(FLUTTER_ROOT, "android", "release.keystore")
-    keystore_b64 = ENV["ANDROID_KEYSTORE_BASE64"]
-    UI.user_error!("ANDROID_KEYSTORE_BASE64 non définie") unless keystore_b64
+    keystore_b64 = ENV["ANDROID_PATIENT_KEYSTORE_BASE64"] || ENV["ANDROID_KEYSTORE_BASE64"]
+    UI.user_error!("ANDROID_PATIENT_KEYSTORE_BASE64 non définie") unless keystore_b64
     require "base64"
     File.binwrite(keystore_path, Base64.decode64(keystore_b64.gsub(/\s+/, '')))
     store_pw = ENV.fetch("ANDROID_STORE_PASSWORD")
