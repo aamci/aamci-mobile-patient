@@ -252,14 +252,14 @@ class AppointmentDetailScreen extends ConsumerWidget {
 
     if (confirmed != true) return;
 
-    final success = await ref.read(appointmentsProvider.notifier).cancel(appointment.id);
+    final error = await ref.read(appointmentsProvider.notifier).cancel(appointment.id);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(success ? 'Rendez-vous annulé' : 'Erreur lors de l\'annulation'),
-        backgroundColor: success ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
+        content: Text(error == null ? 'Rendez-vous annulé' : error),
+        backgroundColor: error == null ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
       ));
-      if (success) context.pop();
+      if (error == null) context.pop();
     }
   }
 

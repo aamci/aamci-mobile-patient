@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/datasources/appointments_remote_datasource.dart';
@@ -72,13 +73,19 @@ class AppointmentsNotifier extends StateNotifier<AppointmentsState> {
     }
   }
 
-  Future<bool> cancel(String id) async {
+  Future<String?> cancel(String id) async {
     try {
       await _datasource.cancelAppointment(id);
       await load();
-      return true;
-    } catch (_) {
-      return false;
+      return null;
+    } catch (e) {
+      if (e is DioException) {
+        final data = e.response?.data;
+        if (data is Map && data['message'] is String) {
+          return data['message'] as String;
+        }
+      }
+      return 'Erreur lors de l\'annulation';
     }
   }
 }

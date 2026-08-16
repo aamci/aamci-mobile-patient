@@ -11,9 +11,9 @@ class HealthRecordsRemoteDatasource {
     return response.data as Map<String, dynamic>;
   }
 
-  Future<List<dynamic>> getVitals() async {
+  Future<Map<String, dynamic>> getVitals() async {
     final response = await _apiClient.get(ApiEndpoints.vitals);
-    return response.data as List;
+    return response.data as Map<String, dynamic>;
   }
 
   Future<List<dynamic>> getVaccinations() async {

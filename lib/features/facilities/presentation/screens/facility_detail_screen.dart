@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/facilities_provider.dart';
+import '../../../doctors/data/models/doctor_model.dart';
 
 class FacilityDetailScreen extends ConsumerWidget {
   final String facilityId;
@@ -192,7 +194,14 @@ class FacilityDetailScreen extends ConsumerWidget {
                   ),
                 ),
                 data: (doctors) {
-                  if (doctors.isEmpty) {
+                  // Filter out deleted/inactive accounts
+                  final activeDoctors = doctors.where((d) {
+                    final user = d['user'] as Map<String, dynamic>?;
+                    final name = user?['fullName'] as String? ?? '';
+                    return name.isNotEmpty && !name.toLowerCase().contains('supprim');
+                  }).toList();
+
+                  if (activeDoctors.isEmpty) {
                     return Card(
                       child: Padding(
                         padding: const EdgeInsets.all(32),
@@ -212,19 +221,34 @@ class FacilityDetailScreen extends ConsumerWidget {
                   }
 
                   return Card(
+                    clipBehavior: Clip.hardEdge,
                     child: Column(
-                      children: doctors.asMap().entries.map((entry) {
+                      children: activeDoctors.asMap().entries.map((entry) {
                         final index = entry.key;
                         final doctor = entry.value;
-                        final fullName =
-                            doctor['fullName'] as String? ?? 'Médecin';
-                        final specialty =
-                            doctor['specialty'] as String? ?? '';
+                        final user = doctor['user'] as Map<String, dynamic>?;
+                        final fullName = user?['fullName'] as String? ?? 'Médecin';
+                        final specialty = doctor['specialty'] as String? ?? '';
+
+                        final doctorModel = DoctorModel(
+                          id: user?['id'] as String? ?? doctor['id'] as String,
+                          fullName: fullName,
+                          email: user?['email'] as String? ?? '',
+                          avatarUrl: user?['avatarUrl'] as String?,
+                          doctorProfile: DoctorProfile(
+                            id: doctor['id'] as String,
+                            specialty: specialty,
+                          ),
+                        );
 
                         return Column(
                           children: [
                             if (index > 0) const Divider(height: 1),
                             ListTile(
+                              onTap: () => context.push(
+                                '/doctor/${doctorModel.id}',
+                                extra: doctorModel,
+                              ),
                               leading: CircleAvatar(
                                 backgroundColor: Theme.of(context)
                                     .colorScheme
@@ -233,16 +257,14 @@ class FacilityDetailScreen extends ConsumerWidget {
                                 child: Text(
                                   fullName.substring(0, 1).toUpperCase(),
                                   style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(context).colorScheme.primary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                               title: Text('Dr. $fullName'),
-                              subtitle: specialty.isNotEmpty
-                                  ? Text(specialty)
-                                  : null,
+                              subtitle: specialty.isNotEmpty ? Text(specialty) : null,
+                              trailing: const Icon(Icons.chevron_right, size: 18),
                             ),
                           ],
                         );

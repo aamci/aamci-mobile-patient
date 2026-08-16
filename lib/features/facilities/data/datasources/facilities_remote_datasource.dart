@@ -17,6 +17,10 @@ class FacilitiesRemoteDatasource {
 
   Future<List<dynamic>> getFacilityDoctors(String id) async {
     final response = await _apiClient.get(ApiEndpoints.facilityDoctors(id));
-    return response.data as List;
+    // API returns { data: [...], meta: {...} }
+    final body = response.data;
+    if (body is Map && body['data'] is List) return body['data'] as List;
+    if (body is List) return body;
+    return [];
   }
 }

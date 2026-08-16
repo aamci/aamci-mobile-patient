@@ -12,7 +12,7 @@ final healthRecordProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   return datasource.getHealthRecord();
 });
 
-final vitalsProvider = FutureProvider<List<dynamic>>((ref) async {
+final vitalsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final datasource = ref.watch(healthRecordsRemoteProvider);
   return datasource.getVitals();
 });
