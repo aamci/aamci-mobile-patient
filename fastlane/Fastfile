@@ -30,30 +30,28 @@ platform :android do
       sh("flutter build appbundle --release --build-number=#{build_number}")
     end
     json_key = ENV["GOOGLE_PLAY_JSON_KEY"]
-    if json_key.nil? || json_key.empty?
-      UI.important("GOOGLE_PLAY_JSON_KEY non définie — build produit mais non uploadé.")
-    else
-      is_file = File.exist?(json_key.strip)
-      unless is_file
-        require 'json'
-        begin
-          JSON.parse(json_key)
-        rescue JSON::ParserError
-          UI.important("GOOGLE_PLAY_JSON_KEY n'est pas un JSON valide — vérifiez la variable GitLab. Build produit mais non uploadé.")
-          next
-        end
+    UI.user_error!("GOOGLE_PLAY_JSON_KEY (GOOGLE_PLAY_PATIENT_JSON_KEY) n'est pas définie dans les variables GitLab CI.") if json_key.nil? || json_key.empty?
+
+    is_file = File.exist?(json_key.strip)
+    unless is_file
+      require 'json'
+      begin
+        JSON.parse(json_key)
+      rescue JSON::ParserError
+        UI.user_error!("GOOGLE_PLAY_JSON_KEY n'est pas un JSON valide ni un chemin de fichier existant.")
       end
-      upload_to_play_store(
-        track:                   "internal",
-        aab:                     "#{FLUTTER_ROOT}/build/app/outputs/bundle/release/app-release.aab",
-        json_key:                is_file ? json_key.strip : nil,
-        json_key_data:           is_file ? nil : json_key,
-        skip_upload_screenshots: true,
-        skip_upload_images:      true,
-        skip_upload_metadata:    true,
-        release_status:          "completed"
-      )
     end
+
+    upload_to_play_store(
+      track:                   "internal",
+      aab:                     "#{FLUTTER_ROOT}/build/app/outputs/bundle/release/app-release.aab",
+      json_key:                is_file ? json_key.strip : nil,
+      json_key_data:           is_file ? nil : json_key,
+      skip_upload_screenshots: true,
+      skip_upload_images:      true,
+      skip_upload_metadata:    true,
+      release_status:          "completed"
+    )
   end
 
   desc "Build AAB + déploiement Google Play (production)"
