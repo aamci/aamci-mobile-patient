@@ -220,6 +220,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     ),
                                   ),
                                 ),
+                                const TextSpan(text: ' et les '),
+                                WidgetSpan(
+                                  child: GestureDetector(
+                                    onTap: () => context.push('/terms'),
+                                    child: const Text(
+                                      'CGU',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF0D9488),
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 const TextSpan(text: '.'),
                               ],
                             ),

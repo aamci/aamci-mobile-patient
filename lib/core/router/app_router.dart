@@ -13,6 +13,8 @@ import '../../features/doctors/presentation/screens/booking_screen.dart';
 import '../../features/doctors/data/models/doctor_model.dart';
 import '../../features/doctors/data/models/slot_model.dart';
 import '../../features/appointments/presentation/screens/appointments_screen.dart';
+import '../../features/appointments/presentation/screens/appointment_detail_screen.dart';
+import '../../features/appointments/data/models/appointment_model.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/messages/presentation/screens/conversations_screen.dart';
 import '../../features/messages/presentation/screens/conversation_detail_screen.dart';
@@ -26,6 +28,7 @@ import '../../features/facilities/presentation/screens/facilities_screen.dart';
 import '../../features/facilities/presentation/screens/facility_detail_screen.dart';
 import '../../features/teleconsultation/presentation/screens/teleconsultation_screen.dart';
 import '../../features/privacy/presentation/screens/privacy_screen.dart';
+import '../../features/privacy/presentation/screens/terms_screen.dart';
 import '../../features/insurance/presentation/screens/insurance_screen.dart';
 import '../../features/emergency_contacts/presentation/screens/emergency_contacts_screen.dart';
 import '../../features/invoices/presentation/screens/invoices_screen.dart';
@@ -143,6 +146,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PrivacyScreen(),
       ),
       GoRoute(
+        path: '/terms',
+        builder: (context, state) => const TermsScreen(),
+      ),
+      GoRoute(
         path: '/insurance',
         builder: (context, state) => const InsuranceScreen(),
       ),
@@ -189,6 +196,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => const NoTransitionPage(
               child: AppointmentsScreen(),
             ),
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (context, state) {
+                  final appointment = state.extra as AppointmentModel;
+                  return AppointmentDetailScreen(appointment: appointment);
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/messages',

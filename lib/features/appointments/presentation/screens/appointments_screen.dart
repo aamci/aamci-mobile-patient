@@ -230,7 +230,10 @@ class _AppointmentCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
+      clipBehavior: Clip.hardEdge,
+      child: InkWell(
+        onTap: () => context.push('/appointments/${appointment.id}', extra: appointment),
+        child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -328,6 +331,7 @@ class _AppointmentCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
       ),
     );
   }

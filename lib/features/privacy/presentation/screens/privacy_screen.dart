@@ -47,7 +47,7 @@ class PrivacyScreen extends StatelessWidget {
     _Section(
       title: '9. Contact',
       content:
-          'Pour exercer vos droits ou pour toute question, contactez-nous via le formulaire de support de l\'application ou par email à : privacy@ibogha.ga',
+          'Pour exercer vos droits ou pour toute question, contactez-nous via le formulaire de support de l\'application ou par email à : privacy@ibogha241.ga',
     ),
   ];
 
@@ -81,7 +81,7 @@ class PrivacyScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Dernière mise à jour : mai 2026',
+                  'Dernière mise à jour : août 2026',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],

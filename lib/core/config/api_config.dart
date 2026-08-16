@@ -7,7 +7,8 @@ class ApiConfig {
 
   static String get baseUrl {
     const isProduction = bool.fromEnvironment('dart.vm.product');
-    if (isProduction) return prodBaseUrl;
+    const useProd = bool.fromEnvironment('USE_PROD');
+    if (isProduction || useProd) return prodBaseUrl;
     return Platform.isAndroid
         ? 'http://10.0.2.2:3000'
         : 'http://localhost:3000';
