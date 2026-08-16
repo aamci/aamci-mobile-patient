@@ -55,9 +55,9 @@ class TermsScreen extends StatelessWidget {
           'Le traitement de vos données est régi par notre Politique de confidentialité, accessible depuis ce menu. Vos données médicales sont chiffrées avec AES-256-GCM et ne sont jamais revendues.\n\nContact données : privacy@ibogha241.ga',
     ),
     _Section(
-      title: '11. Résiliation',
+      title: '11. Résiliation et suppression de compte',
       content:
-          'Vous pouvez supprimer votre compte à tout moment depuis les paramètres. Ibogha se réserve le droit de résilier un compte en cas de violation des présentes CGU.',
+          'Vous pouvez supprimer votre compte à tout moment depuis les paramètres de l\'application.\n\nAprès votre demande, votre compte est désactivé immédiatement et vos données personnelles (profil, rendez-vous, dossiers médicaux, consultations) sont conservées pendant 30 jours, le temps de traiter d\'éventuelles réclamations ou obligations légales. Au terme de ce délai, l\'ensemble de vos données est définitivement effacé de nos systèmes.\n\nDurant ces 30 jours, vous pouvez contacter support@ibogha241.ga pour annuler la suppression et récupérer votre compte. Passé ce délai, aucune restauration ne sera possible.\n\nIbogha se réserve le droit de résilier un compte en cas de violation des présentes CGU, avec application du même délai de 30 jours sauf motif grave.',
     ),
     _Section(
       title: '12. Modifications et contact',
