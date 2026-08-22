@@ -43,4 +43,29 @@ class MessagesRemoteDatasource {
     final response = await _apiClient.get(ApiEndpoints.unreadMessageCount);
     return (response.data as Map<String, dynamic>)['count'] as int? ?? 0;
   }
+
+  Future<void> report({
+    required String targetId,
+    required String type,
+    required String reason,
+    String? details,
+    String? conversationId,
+    required String token,
+  }) async {
+    await _apiClient.post('/reports', data: {
+      'targetId': targetId,
+      'type': type,
+      'reason': reason,
+      if (details != null) 'details': details,
+      if (conversationId != null) 'conversationId': conversationId,
+    });
+  }
+
+  Future<void> blockUser({required String targetId, required String token}) async {
+    await _apiClient.post('/blocks/$targetId');
+  }
+
+  Future<void> unblockUser({required String targetId, required String token}) async {
+    await _apiClient.delete('/blocks/$targetId');
+  }
 }

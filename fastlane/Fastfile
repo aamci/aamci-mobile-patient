@@ -130,6 +130,7 @@ platform :ios do
     Dir.chdir(FLUTTER_ROOT) do
       sh("flutter build ipa --release --build-number=#{build_number} --export-options-plist=#{export_plist}")
     end
+    strip_simulator_slices
     upload_to_testflight(
       ipa:                              Dir["#{FLUTTER_ROOT}/build/ios/ipa/*.ipa"].first,
       skip_waiting_for_build_processing: true,
@@ -146,6 +147,7 @@ platform :ios do
     Dir.chdir(FLUTTER_ROOT) do
       sh("flutter build ipa --release --build-number=#{build_number} --export-options-plist=#{export_plist}")
     end
+    strip_simulator_slices
     deliver(
       ipa:                Dir["#{FLUTTER_ROOT}/build/ios/ipa/*.ipa"].first,
       submit_for_review:  true,
@@ -154,6 +156,42 @@ platform :ios do
       skip_screenshots:   true,
       skip_metadata:      true
     )
+  end
+
+  # Supprime le flag de plateforme iOS Simulator (platform 7) des binaires Mach-O
+  # embarqués dans l'IPA. Nécessaire pour objective_c.framework et autres packages
+  # Flutter qui partagent l'architecture arm64 entre device et simulator — lipo
+  # ne peut pas distinguer les deux, xcrun vtool agit sur les platform flags.
+  private_lane :strip_simulator_slices do
+    ipa_path = Dir["#{FLUTTER_ROOT}/build/ios/ipa/*.ipa"].first
+    UI.user_error!("IPA introuvable dans build/ios/ipa/") unless ipa_path
+
+    tmp_dir = "#{FLUTTER_ROOT}/build/ios/ipa_strip_tmp"
+    sh("rm -rf '#{tmp_dir}' && mkdir -p '#{tmp_dir}'")
+    sh("cd '#{tmp_dir}' && unzip -q '#{ipa_path}'")
+
+    Dir["#{tmp_dir}/Payload/Runner.app/Frameworks/**/*.framework",
+        "#{tmp_dir}/Payload/Runner.app/Frameworks/**/*.dylib"].each do |fw|
+      binary = File.directory?(fw) ? "#{fw}/#{File.basename(fw, '.framework')}" : fw
+      next unless File.exist?(binary)
+
+      # Vérifie si le binaire contient un build pour iOS Simulator (platform 7)
+      build_info = `xcrun vtool -show-build '#{binary}' 2>/dev/null`
+      next unless build_info.include?("IPHONE_SIMULATOR") || build_info =~ /platform\s+7\b/i
+
+      UI.message("Suppression platform iOS Simulator de : #{File.basename(binary)}")
+      sh("xcrun vtool -remove-build-version 7 -output '#{binary}' '#{binary}' 2>/dev/null || true")
+
+      # Re-signe le binaire après modification
+      identity = ENV["EXPANDED_CODE_SIGN_IDENTITY"] || "-"
+      sh("codesign --force --sign '#{identity}' '#{binary}' 2>/dev/null || true")
+    end
+
+    stripped_ipa = ipa_path.sub(".ipa", "-stripped.ipa")
+    sh("cd '#{tmp_dir}' && zip -qr '#{stripped_ipa}' Payload")
+    sh("mv '#{stripped_ipa}' '#{ipa_path}'")
+    sh("rm -rf '#{tmp_dir}'")
+    UI.success("IPA strippée : #{File.basename(ipa_path)}")
   end
 
   # Configure l'API Key App Store Connect (évite le mot de passe Apple 2FA)

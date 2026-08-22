@@ -58,7 +58,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Icon(Icons.local_hospital_rounded, size: 64, color: primary),
                 const SizedBox(height: 16),
                 Text(
-                  'Health Platform',
+                  'Ibogha',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: primary,

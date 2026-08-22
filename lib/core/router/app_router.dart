@@ -138,6 +138,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return ConversationDetailScreen(
             conversationId: state.pathParameters['id']!,
             participantName: extra['name'] as String? ?? 'Conversation',
+            participantId: extra['participantId'] as String? ?? '',
           );
         },
       ),
@@ -176,6 +177,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      GoRoute(
+        path: '/appointments/:id',
+        builder: (context, state) {
+          final appointment = state.extra as AppointmentModel;
+          return AppointmentDetailScreen(appointment: appointment);
+        },
+      ),
       ShellRoute(
         builder: (context, state, child) => ShellScaffold(child: child),
         routes: [
@@ -196,15 +204,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => const NoTransitionPage(
               child: AppointmentsScreen(),
             ),
-            routes: [
-              GoRoute(
-                path: ':id',
-                builder: (context, state) {
-                  final appointment = state.extra as AppointmentModel;
-                  return AppointmentDetailScreen(appointment: appointment);
-                },
-              ),
-            ],
           ),
           GoRoute(
             path: '/messages',

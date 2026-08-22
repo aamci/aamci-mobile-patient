@@ -31,6 +31,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
   // Step 1: Type + motif
   AppointmentKindModel? _selectedKind;
+  final Set<String> _selectedChips = {};
   final _notesController = TextEditingController();
 
   // Submit state
@@ -94,14 +95,17 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       _error = null;
     });
 
+    final notesParts = [
+      _selectedChips.join(', '),
+      _notesController.text.trim(),
+    ].where((s) => s.isNotEmpty).join(' — ');
+
     final success = await ref.read(appointmentsProvider.notifier).book(
           doctorId: widget.doctor.id,
           slotStart: widget.slot.start,
           slotEnd: widget.slot.end,
           kindId: _selectedKind?.id,
-          notes: _notesController.text.trim().isEmpty
-              ? null
-              : _notesController.text.trim(),
+          notes: notesParts.isEmpty ? null : notesParts,
           beneficiaryName:
               _bookingFor == 'other' ? _nameController.text.trim() : null,
           beneficiaryPhone:
@@ -411,7 +415,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
           ...kinds.map((kind) {
             final isSelected = _selectedKind?.id == kind.id;
             return GestureDetector(
-              onTap: () => setState(() => _selectedKind = kind),
+              onTap: () => setState(() => _selectedKind = _selectedKind?.id == kind.id ? null : kind),
               child: Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.all(14),
@@ -498,21 +502,33 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             'Douleur',
             'Fièvre',
             'Renouvellement ordonnance',
-          ].map((s) => GestureDetector(
-            onTap: () {
-              final current = _notesController.text.trim();
-              _notesController.text = current.isEmpty ? s : '$current, $s';
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+          ].map((s) {
+            final isActive = _selectedChips.contains(s);
+            return GestureDetector(
+              onTap: () => setState(() {
+                isActive ? _selectedChips.remove(s) : _selectedChips.add(s);
+              }),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isActive ? primary.withValues(alpha: 0.1) : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isActive ? primary : const Color(0xFFE2E8F0),
+                    width: isActive ? 1.5 : 1,
+                  ),
+                ),
+                child: Text(
+                  s,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isActive ? primary : const Color(0xFF475569),
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
               ),
-              child: Text(s, style: const TextStyle(fontSize: 13, color: Color(0xFF475569))),
-            ),
-          )).toList(),
+            );
+          }).toList(),
         ),
       ],
     );

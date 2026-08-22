@@ -101,6 +101,7 @@ class ConversationsScreen extends ConsumerWidget {
                       context.push('/conversation/$convId', extra: {
                         'name': name,
                         'conversationId': convId,
+                        'participantId': other['id']?.toString() ?? '',
                       });
                     }
                   },
